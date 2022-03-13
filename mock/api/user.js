@@ -1,16 +1,38 @@
-import { resuleSuccess, resuleError } from '../_utils';
+import { resuleSuccess, resuleError, getRequestToken } from '../_utils';
 
-function createFakeUserList() {
+export function createFakeUserList() {
   return [
     {
       username: 'test',
       password: '123456',
       token: 'faketoken1',
+      userId: '1',
+      realName: 'Vben Admin',
+      avatar: 'https://q1.qlogo.cn/g?b=qq&nk=190848757&s=640',
+      desc: 'manager',
+      homePath: '/dashboard/analysis',
+      roles: [
+        {
+          roleName: 'Super Admin',
+          value: 'super',
+        },
+      ],
     },
     {
       username: 'admin',
       password: '123456',
       token: 'faketoken2',
+      userId: '2',
+      realName: 'test user',
+      avatar: 'https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640',
+      desc: 'tester',
+      homePath: '/dashboard/workbench',
+      roles: [
+        {
+          roleName: 'Tester',
+          value: 'test',
+        },
+      ],
     },
   ];
 }
@@ -19,6 +41,7 @@ export default [
   {
     url: '/api/login',
     method: 'post',
+    timeout: 1000,
     response: ({ body }) => {
       const { username, password } = body;
       let checkUser = createFakeUserList().find(
@@ -30,30 +53,16 @@ export default [
     },
   },
   {
-    url: '/api/post',
-    method: 'post',
+    url: '/api/userInfo',
+    method: 'get',
     timeout: 2000,
-    response: {
-      code: 0,
-      data: {
-        name: 'vben',
-      },
-    },
-  },
-  {
-    url: '/api/text',
-    method: 'post',
-    rawResponse: async (req, res) => {
-      let reqbody = '';
-      await new Promise(resolve => {
-        req.on('data', chunk => {
-          reqbody += chunk;
-        });
-        req.on('end', () => resolve(undefined));
-      });
-      res.setHeader('Content-Type', 'text/plain');
-      res.statusCode = 200;
-      res.end(`hello, ${reqbody}`);
+    response: ({ headers }) => {
+      console.log(headers, 'headers');
+      let token = getRequestToken(headers);
+      let checkUser = createFakeUserList().find(user => user.token == token);
+      if (!checkUser) return resuleError('查无此用户');
+      delete checkUser.password;
+      return resuleSuccess(checkUser);
     },
   },
 ];

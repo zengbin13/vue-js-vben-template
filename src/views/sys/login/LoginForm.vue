@@ -12,6 +12,7 @@
         <el-button
           type="primary"
           class="w-full"
+          :loading="loading"
           @click="handleLogin(loginFormRef)"
         >
           登录
@@ -25,9 +26,13 @@
 import { ElForm, ElFormItem, ElInput } from 'element-plus';
 import { reactive, ref } from 'vue';
 
+import { useMessage } from '@/hooks/web/useMessage';
+const { createNotification } = useMessage();
+
 import { useUserStore } from '@/store/modules/user';
 const userStore = useUserStore();
 
+let loading = ref(false);
 const loginData = reactive({
   username: 'test',
   password: '123456',
@@ -62,12 +67,22 @@ const rules = reactive({
   ],
 });
 
-const handleLogin = formEl => {
+const handleLogin = async formEl => {
   if (!formEl) return;
-  formEl.validate(valid => {
+  try {
+    let valid = await formEl.validate();
     if (!valid) return;
-    userStore.login(loginData);
-  });
+    loading.value = true;
+    let userInfo = await userStore.login(loginData);
+    createNotification.success({
+      title: '登录成功',
+      message: `欢迎回来${userInfo.username || ''}`,
+    });
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 

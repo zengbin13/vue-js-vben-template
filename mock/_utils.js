@@ -13,3 +13,7 @@ export function resuleError(message = 'Request failed', code = 1, data = {}) {
     data,
   };
 }
+
+export function getRequestToken(headers) {
+  return headers.authorization || '';
+}
